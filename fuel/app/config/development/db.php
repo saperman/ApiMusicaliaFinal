@@ -6,9 +6,9 @@
 return array(
 	'default' => array(
 		'connection'  => array(
-			'dsn'        => 'mysql:host=localhost:8889;dbname=ApiMusicaFinal',
-			'username'   => 'root',
-			'password'   => 'root',
+			'dsn'        => 'mysql:host=localhost;dbname=enrique',
+			'username'   => 'enrique',
+			'password'   => '5claZ0hu1WFKBzJ7',
 		),
 	),
 );
