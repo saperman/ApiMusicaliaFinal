@@ -6,7 +6,7 @@ class Controller_Users extends Controller_Base
     private  $idAdmin = 1;
     private  $idUser = 2;
 
-    public function get_configAdmin(){
+    public function get_configAdmin(){ //funcion para configurar al administrador la primera vez que se tira
     	$adminName = 'Admin';
     	$adminPassword = 'admin1234';
     	$adminEmail = 'admin@cev.com';
@@ -39,19 +39,19 @@ class Controller_Users extends Controller_Base
     public function post_register()
     {
         try {
-            if ( !isset($_POST['userName']) || !isset($_POST['password']) || !isset($_POST['email'])) 
+            if ( !isset($_POST['userName']) || !isset($_POST['password']) || !isset($_POST['email'])) //parametros definidos
             {	
             	$array[]= [$_POST['userName'],$_POST['email']];
 
             	return $this->respuesta(400, 'Algun paramentro esta vacio', $array);
             }if(isset($_POST['x']) || isset($_POST['y'])){
             		if(empty($_POST['x']) || empty($_POST['y'])){
-	            		return $this->respuesta(400, 'Coordenadas vacias', '');
+	            		return $this->respuesta(400, 'Coordenadas vacias', ''); 
 	            	}
             	}else{
             		return $this->respuesta(400, 'Coordenadas no definidas', '');
             	}
-            if(!empty($_POST['userName']) && !empty($_POST['password']) && !empty($_POST['email']) && !empty($_POST["confirmPassword"])){
+            if(!empty($_POST['userName']) && !empty($_POST['password']) && !empty($_POST['email']) && !empty($_POST["confirmPassword"])){ //campos de los parametros no vacios
 
             	if((($_POST["password"] !== $_POST["confirmPassword"]))){
             		return $this->respuesta(400, 'Las contraseñas no coinciden', '');
@@ -60,13 +60,13 @@ class Controller_Users extends Controller_Base
             			return $this->respuesta(400, 'La contraseña debe tener al menos 5 caracteres', '');
             	}
 				$input = $_POST;
-	            $newUser = $this->newUser($input);
-	           	$json = $this->saveUser($newUser);
+	            $newUser = $this->newUser($input); //se crea un usuario nuevo
+	           	$json = $this->saveUser($newUser); //se guarda el usuario y manda la respuesta
 	        }else{
 	        	return $this->respuesta(400, 'Algun campo vacio ', '');
 	        }
         }catch (Exception $e){
-        	return $this->respuesta(500, $e->getMessage(), '');
+        	return $this->respuesta(500, $e->getMessage(), ''); //error del servidor
         }     
     }
     private function newUser($input)
@@ -103,9 +103,9 @@ class Controller_Users extends Controller_Base
 
     public function post_login()
     {	try{
-	        if ( !isset($_POST['email']) || !isset($_POST['password']) ) {
+	        if ( !isset($_POST['email']) || !isset($_POST['password']) ) { //parametros correctos
 	        	return $this->respuesta(400, 'alguno de los datos esta vacio', '');
-	        }else if( !empty($_POST['email']) && !empty($_POST['password'])){
+	        }else if( !empty($_POST['email']) && !empty($_POST['password'])){ //parametros no vacios
 	            $input = $_POST;
 	            $user = Model_Users::find('all', 
 		            						array('where' => array(
@@ -125,13 +125,13 @@ class Controller_Users extends Controller_Base
 	                $token = $this->encodeToken($userName, $password, $id, $email, $id_role);
 	                $arrayData = array();
 	               	$arrayData['token'] = $token;
-	               	return $this->respuesta(200, 'Log In correcto', $arrayData);
+	               	return $this->respuesta(200, 'Log In correcto', $arrayData); //si se encuentra al usuario, se devuelve un token con su informacion
 	        	}else{
-	        		return $this->respuesta(400, 'algun dato erroneo ', '');
+	        		return $this->respuesta(400, 'algun dato erroneo ', '');//respuesta si los datos no coinciden con la bbdd
 	       		 }
 	     
 	        }else{
-	        	return $this->respuesta(400, 'No se permiten cadenas de texto vacias', '');
+	        	return $this->respuesta(400, 'No se permiten cadenas de texto vacias', ''); //si los parametros estan vacios
 	        }
 	        	
 	    }catch(Exception $e){
@@ -179,48 +179,43 @@ class Controller_Users extends Controller_Base
     	
     	 if($arrayAuthenticated['authenticated']){
 
-			$newPassword = $_POST['newPassword'];
-			$confirmPassword = $_POST['confirmPassword'];
-
-			if(!isset($newPassword) || !isset($confirmPassword)) {
+			if(!isset($_POST['newPassword']) || !isset($_POST['confirmPassword'])) {
 				return $this->respuesta(400, 'parametro no definido', "");
 			}
-				if(($_POST["newPassword"] != $_POST["confirmPassword"])){
-				$decodedToken = $this->decodeToken();
-				$user = Model_Users::find('all', 
-				            					array('where' => array(
+			if(empty($_POST['newPassword'] || empty($_POST['confirmPassword']))){
+				return $this->respuesta(400, 'campos vacios', "");
+			}
+
+			$newPassword = $_POST['newPassword'];
+			$confirmPassword = $_POST['confirmPassword'];
+			if(($_POST["newPassword"] == $_POST["confirmPassword"])){
+					$decodedToken = $this->decodeToken();
+					$user = Model_Users::find('all', 
+					            					array('where' => array(
 				            							array('email', '=', $decodedToken->email), 
 				            							array('password', '=', $decodedToken->password)
 				            							)
 				            						)
 				            					);
-					if(isset($newPassword) && isset($confirmPassword)){
-						if(!empty($newPassword)|| !empty($confirmPassword)){
-							if(strlen($newPassword) >= 5){
-								$userTochange = Model_Users::find($decodedToken->id);
-								$userTochange ->password = $this->encode($newPassword);
-								$userTochange -> save();
+					if(strlen($newPassword) >= 5){
+						$userTochange = Model_Users::find($decodedToken->id);
+						$userTochange ->password = $this->encode($newPassword);
+						$userTochange -> save();
 
-								$userName = $userTochange->userName;
-				            	$password = $userTochange->password;
-				            	$id = $userTochange->id;
-				            	$email = $userTochange->email;
-				            	$id_role = $userTochange->id_role;
+						$userName = $userTochange->userName;
+				    	$password = $userTochange->password;
+				    	$id = $userTochange->id;
+				    	$email = $userTochange->email;
+				    	$id_role = $userTochange->id_role;
 
-								$token = $this->encodeToken($userName, $password, $id, $email, $id_role);
-								$arrayData = array();
-			               		$arrayData['token'] = $token;
-			               		return $this->respuesta(200, 'Contraseña modificada correctamente', $arrayData);
-					 	  }else{
-					   		 return $this->respuesta(204, 'Contraseña demasiado corta', "");
-					   		}
-				    	}else{
-				    		return $this->respuesta(400, 'Contraseña vacios', "");
-				        }
-					}else{
-						return $this->respuesta(400, 'Campos vacios', "");
-						}
-				}else{
+						$token = $this->encodeToken($userName, $password, $id, $email, $id_role);
+						$arrayData = array();
+			       		$arrayData['token'] = $token;
+			       		return $this->respuesta(200, 'Contraseña modificada correctamente', $arrayData);
+				  }else{
+					   		return $this->respuesta(204, 'Contraseña demasiado corta', "");
+					   	}
+			}else{
 					return $this->respuesta(400, 'las contraseñas no coinciden', "");
 				}
 		}else{
@@ -238,59 +233,13 @@ class Controller_Users extends Controller_Base
 
 	    			$arrayData = array();
 	    			$arrayData['userName'] = $decodedToken->userName;
+	    			$arrayData['userEmail'] = $decodedToken->email;
 
 	    			return $this->respuesta(200, 'info User', $arrayData);
     	}else{
     			return $this->respuesta(401, 'NO AUTORIZACION','');
     		}
     }
-    public function post_changeImage()
-    {
-    	$authenticated = $this->authenticate();
-    	$arrayAuthenticated = json_decode($authenticated, true);
-    
-    	 if($arrayAuthenticated['authenticated']){
-	    		$decodedToken = JWT::decode($arrayAuthenticated["data"], $this->key, array('HS256'));
-	    		$user = Model_Users::find('all', 	array('where' => array(
-			            							array('id', '=', $decodedToken->id), 
-			            							)
-			            						)
-			            					);  		
-	        try {
-		        	if (!isset($_FILES['profilePicture']) || empty($_FILES['profilePicture'])) 
-		            {
-		            	return $this->respuesta(401, 'La photo esta vacia','');
-		            }
-	        	 	$config = array(
-			            'path' => DOCROOT . 'assets/img',
-			            'randomize' => true,
-			            'ext_whitelist' => array('img', 'jpg', 'jpeg', 'gif', 'png'),
-			        );
-
-			        Upload::process($config);
-
-			        if (Upload::is_valid())
-			        {
-			            Upload::save();
-			            foreach(Upload::get_files() as $file)
-			            {
-			            	$_POST['profilePicture'] = 'http://' . $_SERVER['SERVER_NAME'] . ':' . $_SERVER['SERVER_PORT'] . '/APIZoo/fuelphp/public/assets/img/'
-			            	. $file['saved_as'];
-			            }
-			        }
-
-			        foreach (Upload::get_errors() as $file)
-			        {
-			            return $this->respuesta(500, 'error en la subida','');
-			        }
-			            
-	        }catch (Exception $e){
-	        	return $this->respuesta(500, $e->getMessage(),'');
-			}      
-    	 }else{
-    	 	return $this->respuesta(401, 'No autenticado','');
-     	}
-	 }
 }
 
 

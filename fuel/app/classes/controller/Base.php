@@ -8,7 +8,7 @@ class Controller_Base extends Controller_Rest
     private static $aud = null;
     public $key = 'ETHBSBSAOOIBb134742166128278gutVYTAS76215GFGASUDBG665GBYV656STG2383782BY7Y8R23RY3787QWWQIJ';
 
-    protected function respuesta($code, $message, $data = [])
+    protected function respuesta($code, $message, $data = []) //metodo para crear una respuesta, devuelve una repuesta en json
     {
         $json = $this->response(array(
                     'code' => $code,
@@ -17,18 +17,18 @@ class Controller_Base extends Controller_Rest
                 ));
             return $json;
     }
-    protected function encode($data)
+    protected function encode($data) //metodo para codificar un dato, devuelve el dato codificado
     {
         return  JWT::encode($data, $this->key);
         
     }
-    protected function decode($data)
+    protected function decode($data)//metodo para descodificar un dato, devuelve el dato descodificado
     {
         return  JWT::decode($data, $this->key, array('HS256'));
         
     }
 
-	protected function encodeToken($userName, $password, $id, $email, $id_role)
+	protected function encodeToken($userName, $password, $id, $email, $id_role)//metodo para codificar un token, devuelve el token codificado
     {
         $token = array(
         		"id" => $id,
@@ -40,7 +40,7 @@ class Controller_Base extends Controller_Rest
         $encodedToken = JWT::encode($token, $this->key);
         return $encodedToken;
     }
-    protected function decodeToken()
+    protected function decodeToken() //metodo para descodificar un token, devuelve el token descodificado
     {
         $header = apache_request_headers();
         $token = $header['Authorization'];
@@ -51,14 +51,14 @@ class Controller_Base extends Controller_Rest
         }      
     }
 
-    protected function authenticate(){
+    protected function authenticate(){ //meotodo para autenticar al usuario cuando realiza peticiones
         try {
                
             $header = apache_request_headers();
             $token = $header['Authorization'];
             if(!empty($token))
             {
-                $decodedToken = JWT::decode($token, $this->key, array('HS256'));
+                $decodedToken = JWT::decode($token, $this->key, array('HS256'));  //recojemos el token descodificado
                 $query = Model_Users::find('all', 
                     ['where' => ['userName' => $decodedToken->userName, 
                                  'password' => $decodedToken->password, 
@@ -66,7 +66,7 @@ class Controller_Base extends Controller_Rest
                                  'email' => $decodedToken->email,
                                  'id' => $decodedToken->id
                                 ]]);
-                if($query != null)
+                if($query != null) //si el token no esta vacio
                 {
                     $json = array(
                     'code' => 200,
@@ -74,7 +74,7 @@ class Controller_Base extends Controller_Rest
                     'authenticated' => true,
                     'data' => $token
                     );
-                    return json_encode($json);
+                    return json_encode($json); //respuesta si autentica al usuario
 
                 }else{
                     $json = $this->response(array(
@@ -83,7 +83,7 @@ class Controller_Base extends Controller_Rest
                     'authenticated' => false,
                     'data' => null
                     ));
-                    return $json;
+                    return $json; //respuesta si no se encuentra al usuario
                 
                 }
             }else{
@@ -93,7 +93,7 @@ class Controller_Base extends Controller_Rest
                     'authenticated' => false,
                     'data' => null
                     ));
-                    return $json;
+                    return $json; //respuesta si el token esta vacio
             }
         } 
         catch (Exception $UnexpectedValueException)
@@ -104,7 +104,7 @@ class Controller_Base extends Controller_Rest
                     'authenticated' => false,
                     'data' => null
                     ));
-                    return $json;
+                    return $json; //respuesta si hay error en el servidor
         }
     }
 }

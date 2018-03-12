@@ -3,8 +3,9 @@ use \Model\Users;
 
 class Controller_Roles extends Controller_Base
 {
-	public function post_configRoles()
+	public function post_configRoles() //endpoint para configurar los roles 
 	{
+		
 		$roleAdmin = new Model_Roles();
 		$roleAdmin->type = 'Admin';
 		$roleUser = new Model_Roles();
